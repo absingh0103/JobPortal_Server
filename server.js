@@ -14,6 +14,9 @@ cloudinary.v2.config({
   api_key: process.env.CLOUDINARY_CLIENT_API,
   api_secret: process.env.CLOUDINARY_CLIENT_SECRET,
 });
+app.get("/serverrunning",async(req,resp)=>{
+  resp.status(200).json("Server Running Cron Job");
+})
 
 app.use(express.static(path.join(__dirname, "./client/dist")));
 app.get("*", function (_, resp) {
