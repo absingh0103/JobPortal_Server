@@ -12,12 +12,9 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.get(
-        "/api/v1/user/logout",
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get("/api/v1/user/logout", {
+        withCredentials: true,
+      });
       toast.success(response.data.message);
       setIsAuthorized(false);
       navigateTo("/login");
@@ -28,11 +25,11 @@ const Navbar = () => {
 
   return (
     <nav className={isAuthorized ? "navbarShow" : "navbarHide"}>
-      
       <div className="container">
         <div className="logo">
           <Link to="/">
-          <img src="/logo.png" alt="logo" /></Link>
+            <img src="/logo.png" alt="logo" />
+          </Link>
         </div>
         <ul className={!show ? "menu" : "show-menu menu"}>
           <li>

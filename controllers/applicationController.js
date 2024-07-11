@@ -3,6 +3,7 @@ import ErrorHandler from "../middlewares/error.js";
 import { Application } from "../models/applicationSchema.js";
 import { Job } from "../models/jobSchema.js";
 import cloudinary from "cloudinary";
+import { SendMail, applicationStatusMail } from "../utils/updateStatusMail.js";
 
 
 
@@ -24,7 +25,7 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("Invalid file type. Please upload a PNG file.", 400)
     );
   }
-  
+
   const { name, email, coverLetter, phone, address, jobId } = req.body;
   const applicantID = {
     user: req.user._id,
@@ -144,6 +145,44 @@ export const jobseekerDeleteApplication = catchAsyncErrors(
     });
   }
 );
+export const updateApplicationStatus = catchAsyncErrors(async (req, res, next) => {
+  const { role } = req.user;
+  if (role === "Job Seeker") {
+    return next(
+      new ErrorHandler("Job Seeker not allowed to access this resource.", 400)
+    );
+  }
+  const { id } = req.params;
+  let application = await Application.findById(id);
+  if (!application) {
+    return next(new ErrorHandler("OOPS! Application not found.", 404));
+  }
+  // new: true, => Returning the updated document.
+  // runValidators: true, =>Ensuring schema validation is applied to the update.
+  //  useFindAndModify: false => Using the more modern findOneAndUpdate() method for better performance and compatibility then legecy  FindAndModify().
+  application = await Application.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+  if (application.status == "Selected" || application.status == "Rejected") {
+    try {
+      // Here Cart Store Reference Or Object_id of Product and User with quantity
+      // To send Mail of invoice
+      SendMail({
+        to: application.email,
+        subject: "Status Update",
+        html: applicationStatusMail(application),
+      });
+    } catch (err) {
+      console.error("Error sending mail:", err);
+    }
+  } 
+  res.status(200).json({
+    success: true,
+    message: "Application Status Updated!",
+  });
+});
 
 // Here Next Feature That Employer can Also Delete Their created Job
 // as we are Only using expire which makes job invisible to user

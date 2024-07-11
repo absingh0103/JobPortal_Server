@@ -4,12 +4,14 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import ResumeModal from "./ResumeModal";
-
+import { FaCheck } from "react-icons/fa6";
+import { RxCross2 } from "react-icons/rx";
 const MyApplications = () => {
   const { user } = useContext(Context);
   const [applications, setApplications] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [resumeImageUrl, setResumeImageUrl] = useState("");
+  const [editingMode, setEditingMode] = useState(null);
 
   const { isAuthorized } = useContext(Context);
   const navigateTo = useNavigate();
@@ -58,6 +60,44 @@ const MyApplications = () => {
       toast.error(error.response.data.message);
     }
   };
+  const handleEnableEdit = (applicationId) => {
+    //Here We Are Giving Id in setEditingMode because We want to enable only that job whose ID has been send.
+    console.log(applicationId);
+    setEditingMode(applicationId);
+  };
+
+  //Function For Disabling Editing Mode
+  const handleDisableEdit = () => {
+    setEditingMode(null);
+  };
+
+  //Function For Updating The Job
+  const handleUpdateApplication = async (applicationId) => {
+    const updatedApplication = applications.find(
+      (application) => application._id === applicationId
+    );
+    await axios
+      .put(`/api/v1/application/update/${applicationId}`, updatedApplication, {
+        withCredentials: true,
+      })
+      .then((res) => {
+        toast.success(res.data.message);
+        setEditingMode(null);
+      })
+      .catch((error) => {
+        toast.error(error.response.data.message);
+      });
+  };
+  const handleInputChange = (applicationId, field, value) => {
+    // Update the job object in the jobs state with the new value
+    setApplications((prevApplication) =>
+      prevApplication.map((application) =>
+        application._id === applicationId
+          ? { ...application, [field]: value }
+          : application
+      )
+    );
+  };
 
   const openModal = (imageUrl) => {
     setResumeImageUrl(imageUrl);
@@ -66,6 +106,24 @@ const MyApplications = () => {
 
   const closeModal = () => {
     setModalOpen(false);
+  };
+  const statusColor = (status) => {
+    switch (status) {
+      case "Pending":
+        return "bg-yellow-400";
+
+      case "Review":
+        return "bg-lime-600 ";
+
+      case "Selected":
+        return "bg-green-400 ";
+
+      case "Rejected":
+        return "bg-red-600 ";
+
+      default:
+        return "bg-yellow-400";
+    }
   };
 
   return (
@@ -86,6 +144,7 @@ const MyApplications = () => {
                   key={element._id}
                   deleteApplication={deleteApplication}
                   openModal={openModal}
+                  statusColor={statusColor}
                 />
               );
             })
@@ -105,6 +164,13 @@ const MyApplications = () => {
                   element={element}
                   key={element._id}
                   openModal={openModal}
+                  editingMode={editingMode}
+                  setEditingMode={setEditingMode}
+                  handleUpdateApplication={handleUpdateApplication}
+                  handleEnableEdit={handleEnableEdit}
+                  handleDisableEdit={handleDisableEdit}
+                  handleInputChange={handleInputChange}
+                  statusColor={statusColor}
                 />
               );
             })
@@ -120,7 +186,12 @@ const MyApplications = () => {
 
 export default MyApplications;
 
-const JobSeekerCard = ({ element, deleteApplication, openModal }) => {
+const JobSeekerCard = ({
+  element,
+  deleteApplication,
+  openModal,
+  statusColor,
+}) => {
   return (
     <>
       <div className="job_seeker_card">
@@ -147,6 +218,9 @@ const JobSeekerCard = ({ element, deleteApplication, openModal }) => {
             alt="resume"
             onClick={() => openModal(element.resume.url)}
           />
+        </div>
+        <div className="btn_areaSeeker">
+          <span class={statusColor(element.status)}>{element.status}</span>
         </div>
         <div className="btn_area">
           <button onClick={() => deleteApplication(element._id)}>
@@ -158,7 +232,17 @@ const JobSeekerCard = ({ element, deleteApplication, openModal }) => {
   );
 };
 
-const EmployerCard = ({ element, openModal }) => {
+const EmployerCard = ({
+  element,
+  openModal,
+  editingMode,
+  setEditingMode,
+  handleUpdateApplication,
+  handleEnableEdit,
+  handleDisableEdit,
+  handleInputChange,
+  statusColor,
+}) => {
   return (
     <>
       <div className="job_seeker_card">
@@ -185,6 +269,51 @@ const EmployerCard = ({ element, openModal }) => {
             alt="resume"
             onClick={() => openModal(element.resume.url)}
           />
+        </div>
+        <div class="status">
+          {editingMode === element._id ? (
+            <select
+              value={element.status}
+              onChange={(e) =>
+                handleInputChange(element._id, "status", e.target.value)
+              }
+              disabled={editingMode !== element._id ? true : false}
+            >
+              <option value="Pending">Pending</option>
+              <option value="Review">Review</option>
+              <option value="Selected">Selected</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          ) : (
+            <span class={statusColor(element.status)}>{element.status}</span>
+          )}
+        </div>
+        <div class="btn_areaApp">
+          <div className="">
+            {editingMode === element._id ? (
+              <div class="spacebtn">
+                <button
+                  onClick={() => handleUpdateApplication(element._id)}
+                  className="checkbtn1"
+                >
+                  <FaCheck />
+                </button>
+                <button
+                  onClick={() => handleDisableEdit()}
+                  className="crossbtn1"
+                >
+                  <RxCross2 />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleEnableEdit(element._id)}
+                className="editbtn1"
+              >
+                Update Status
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </>

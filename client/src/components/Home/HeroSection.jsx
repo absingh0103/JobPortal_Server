@@ -76,13 +76,11 @@ const HeroSection = () => {
           {details.map((element) => {
             return (
               <div className="card" key={element.id}>
-                
-                  <div className="icon">{element.icon}</div>
-                  <div className="content">
-                    <p>{element.title}</p>
-                    <p>{element.subTitle}</p>
-                  </div>
-                
+                <div className="icon">{element.icon}</div>
+                <div className="content">
+                  <p>{element.title}</p>
+                  <p>{element.subTitle}</p>
+                </div>
               </div>
             );
           })}

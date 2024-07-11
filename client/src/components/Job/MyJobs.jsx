@@ -16,10 +16,9 @@ const MyJobs = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const { data } = await axios.get(
-          "/api/v1/job/getmyjobs",
-          { withCredentials: true }
-        );
+        const { data } = await axios.get("/api/v1/job/getmyjobs", {
+          withCredentials: true,
+        });
         setMyJobs(data.myJobs);
       } catch (error) {
         toast.error(error.response.data.message);

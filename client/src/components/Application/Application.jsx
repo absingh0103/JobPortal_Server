@@ -35,7 +35,7 @@ const Application = () => {
 
     try {
       const { data } = await axios.post(
-        "api/v1/application/post",
+        "/api/v1/application/post",
         formData,
         {
           withCredentials: true,

@@ -23,7 +23,7 @@ const Jobs = () => {
   if (!isAuthorized) {
     navigateTo("/");
   }
-console.log(jobs)
+  console.log(jobs);
   return (
     <section className="jobs page">
       <div className="container">
